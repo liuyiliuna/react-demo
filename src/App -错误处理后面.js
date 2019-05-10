@@ -1,34 +1,6 @@
-// ref是React提供用来操纵React组件实例引用dom元素使用ref 属性，有时候还是需要访问dom节点访问dom节点的三种情况
-// 1、使用DOM API（focus事件，媒体播放等）
-// 2、调用命令式节点动画
-// 3、与需要dom节点的第三方库集成
-
-
-
-// 使用第三方库lodash主要降js对对象数组和字符串的操作，这里用到了高级排序
-// 下载lodash,然后引入sortBy方法
-
 import React, { Component } from 'react';
-// 引入sortBy方法处理数据从高到低操作
-import {sortBy} from 'lodash';
 import './App.css';
 import { isRestElement } from '@babel/types';
-
-// 导入prop-types 是第三方组件库对props中的变量进行类型检测
-import PropTypes from 'prop-types'
-
-
-// 定义排序函数只是将list数据作为输出 NONE
-const SORTS = {
-	NONE: list => list,
-	TITLE:list => sortBy(list,'title'),
-	AUTHOR:list => sortBy(list,'author'),
-	COMMENTS:list => sortBy(list,'num_comments').reverse(),
-	POINTS:list => sortBy(list,'points').reverse(),
-};
-
-
-// import propTypes form 'prop-types';
 // 不受控组件在原生html中就是有自己的状态，此时需要将不受控组件变成受控组件
 // 绑定到一个类的函数叫做类的方法
 // ES6K扩展运算符...
@@ -83,14 +55,9 @@ const PARAM_SEARCH = 'query=';
 const PARAM_PAGE = 'page=';
 
 // 请求时候抓取一定量数据
-const DEFAULT_HPP = '13'
+const DEFAULT_HPP = '10'
 // 请求时候抓取一定量数据
 const PARAM_HPP = 'hitsPerPage=';
-
-// 加载请求之前
-
-
-
 	class App extends Component {
 	constructor(props){
 		super(props);
@@ -105,17 +72,7 @@ const PARAM_HPP = 'hitsPerPage=';
 			searchTerm:DEFAULT_QUERY,
 
 			// 错误处理
-			error:null,
-
-			// 加载请求之前
-			isLoading:false,
-
-			// 存储排序函数
-			sortKey:'NONE',
-
-			// 反向排序
-			isSortReverse:false,
-
+			error:null
 		};
 		// this.onDismiss = this.onDismiss.bind(this);
 		this.searchList = this.searchList.bind(this);
@@ -127,17 +84,6 @@ const PARAM_HPP = 'hitsPerPage=';
 		// 缓存(如果缓存中存在就不请求或者请求)
 		// this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this)
 		this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
-
-		// 将sortKey设置成App组件的状态
-		this.onSort = this.onSort.bind(this);
-	}
-	onSort(sortKey) {
-		// 反向排序
-		const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse;
-
-		this.setState({sortKey,isSortReverse})
-
-		// this.setState({ sortKey });
 	}
 	// 缓存
 	// needsToSearchTopStories(searchTerm) {
@@ -206,10 +152,8 @@ componentDidMount() {
 		this.setState({
 			results:{
 				...results,
-				[searchKey]: {hits:updatedHits,page},
-				// 当数据请求成功之后将变量置为false
-			},
-			isLoading:false,
+				[searchKey]: {hits:updatedHits,page}
+			}
 		})
 
 		// this.setState({
@@ -225,11 +169,6 @@ componentDidMount() {
 // };
 
 fetchSearchTopStories(searchTerm,page = 0) {
-	// 请求数据时候还没取到数据只为
-	this.setState({
-		isLoading:true
-	})
-
 	// const url =  `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}`;
 	// console.log(url);
 	// 原生fetch API 首先传递url是必须的,然后将获取的数据结构转为json数据格式，再将结果赋值到组件内部状态里面此外用到catch处理错误请求，
@@ -343,20 +282,14 @@ fetchSearchTopStories(searchTerm,page = 0) {
 
 			
 			// 错误处理error
-			 const {
-				 searchTerm,
-				 results,
-				 searchKey,
-				 error,
-				 isLoading,
-				 sortKey,
-				// 反向排序
-				isSortReverse
-				} = this.state;
+			 const {searchTerm,results,searchKey,error} = this.state;
 			 const page = (results && results[searchKey] && results[searchKey].page) || 0;
 			const list = (results && results[searchKey] && results[searchKey].hits) || [];
 
-		
+			// 错误处理
+				if(error) {
+					return <p>Something went wrong.</p>
+				}
         return (
 							<div className = "App" >
 								<div className="page">
@@ -369,28 +302,37 @@ fetchSearchTopStories(searchTerm,page = 0) {
 												Search
 										</Search>
 									</div>
-								{/*  错误处理 */}
-								{
-									error?<div className="interactions">
-													<p>Something went wrong.</p>
-												</div>
-											:<Table 
-												list={list}		
-												sortKey={sortKey}
-												isSortReverse={isSortReverse}  //反向排序
-												onSort={this.onSort}
-												onDismiss={this.onDismiss}					
-												/>
+								{/* 使用三目运算符操作 */}
+								{/* {
+									result ?
+									<Table
+									list={result.hits}
+									pattern={searchTerm}
+									onDismiss={this.onDismiss}									
+									/> :
+									null
 								}
-						
+								 */}
+								{/* 使用逻辑运算符&& 移除过滤功能*/}
+								{/* {
+									result 	&& 
+									<Table
+									list={result.hits}
+									// pattern={searchTerm}
+									onDismiss={this.onDismiss}									
+									/>	
+								} */}
+								<Table
+									list={list}
+									onDismiss={this.onDismiss}									
+									/>
 								<div className="interactions">
-										{/* 高阶组件 */}
-										<ButtonWithLoading
-										isLoading={isLoading}
-										onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
-											More
-										</ButtonWithLoading>
-
+									{/* <Button onClick={() => this.fetchSearchTopStories(searchTerm, page + 1)}>
+										More
+									</Button> */}
+									<Button onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
+										More
+									</Button>
 								</div>
 									{/* <h2> {helloWorld} </h2> 
 									<form>
@@ -409,6 +351,8 @@ fetchSearchTopStories(searchTerm,page = 0) {
     }
 
 }
+
+
 // 绑定  
 // 1、在构造函数中绑定类方法，在构造函数之外写业务逻辑（官方文档中推荐使用）
 // 2、可以在render()函数中绑定类的方法（不推荐使用）
@@ -472,76 +416,22 @@ class ExplainBindingsComponent extends Component {
 // 			</form>
 // }
 // 简化写法使用箭头函数 前面需要加const ;轻量无状态组件
-// const Search = ({value,onChange,onSubmit,children}) => {
-// 								return (
-// 									<form onSubmit={onSubmit}>
-// 									{children}
-// 									<input  	
-// 										type="text"
-// 										value={value}
-// 										onChange={onChange}
-// 									/>
-// 									<button type="submit">
-// 										{children}
-// 									</button>
-// 									</form>
-// 								)
-// }
-
-// ref属性可以在ES6类组件和无状态组件中使用
-// 1、ref在ES6类组件中使用
-// class Search extends Component {
-// 	// 组件挂载的时候聚焦,当程序渲染的时候input字段被聚焦。这是ref基本用法
-// 	componentDidMount(){
-// 		if(this.input) {
-// 			this.input.focus();
-// 		}
-// 	}
-// 	render() {
-// 		const {
-// 			value,
-// 			onChange,
-// 			onSubmit,
-// 			children
-// 		} = this.props;
-// 		return (
-// 			<form onSumbit ={onSubmit} >
-// 				{children}
-// 				<input 
-// 					type="text"
-// 					value={value}
-// 					onChange={onChange}
-// 					// 使用ref属性操作dom,如果是html元素则操作dom，如果是自定义组件操作的是组件返回的实例。
-// 					// 官方推荐使用回调函数形式这里的 node当组件挂载的时候返dom节点
-// 					ref={(node) => {this.input = node;}}
-// 				/>
-// 				<button type="submit">
-// 					{children}
-// 				</button>
-// 			</form>
-// 		)
-// 	}
-// }
-
-// 2、ref在无状态组件中使用获取焦点
 const Search = ({value,onChange,onSubmit,children}) => {
-	let input;
-	return(
-		<form onSumbit ={onSubmit} >
-				{children}
-				<input 
-					type="text"
-					value={value}
-					onChange={onChange}
-					// 使用ref属性操作dom
-					ref={(node) => input = node}
-				/>
-				<button type="submit">
-					{children}
-				</button>
-			</form>
-	)
-}									
+								return (
+									<form onSubmit={onSubmit}>
+									{children}
+									<input  	
+										type="text"
+										value={value}
+										onChange={onChange}
+									/>
+									<button type="submit">
+										{children}
+									</button>
+									</form>
+								)
+}
+											
 
 // Table组件
 // ES6类组件，在类的定义中，它们会继承来自React组件。extends会注册所有生命周期方法，只要在React Component API中。都可以在组件中使用
@@ -560,63 +450,12 @@ const smallColumn = {
 	width:'10%'
 }
 class Table extends Component {
-	// 计算数据反向排序
 	render(){
-		const {
-			list,
-			sortKey,
-			isSortReverse,
-			onSort,
-			onDismiss
-		} = this.props;
-		const sortedList = SORTS[sortKey](list);
-		const reverseSortedList = isSortReverse
-					? sortedList.reverse()
-					: sortedList;
+		const {list,pattern,onDismiss} = this.props;
 		return(
 				<div className="table">
-				{/* 高级排序 */}
-					<div className="table-header">
-						<span style={{width:"40%"}}>
-								<Sort
-								sortKey={'TITLE'}
-								onSort={onSort}>
-									Title
-								</Sort>
-						</span>
-						<span style={{width:'30%'}}>
-							<Sort 
-							sortKey={'AUTHOR'}
-							onSort={onSort}
-							>
-								Author
-							</Sort>
-						</span>
-						<sapn style={{width:'10%'}}>
-							<Sort
-							sortKey={'COMMENTS'}
-							onSort={onSort}
-							>
-								Comments
-							</Sort>
-						</sapn>
-						<span style={{width:'10%'}}>
-							<Sort
-							sortKey={'POINTS'}
-							onSort={onSort}
-							>
-								Points
-							</Sort>
-						</span>
-						<span style={{width:'10%'}}>
-							Archive
-						</span>
-					</div>
-
-	{/* SORTS[sortKey](list).map(item => 。。。。） 反向排序 */}
 					{
-
-						 reverseSortedList.map(item =>
+						list.map(item =>
 							<div key={item.objectID} className="table-row">
 								<span style={{ width: '40%' }}>
 									<a href={item.url}>{item.title}</a>
@@ -646,31 +485,6 @@ class Table extends Component {
 		)
 	}
 }
-
-// Sort组件
-const Sort = ({sortKey,onSort,children}) => 
-<Button
-	onClick={()=> onSort(sortKey)}
-	className='button-inline'
->
-	{children}
-</Button>
-
-// 为Table组件定义接口
-Table.propTypes = {
-	list:PropTypes.arrayOf(
-		PropTypes.shape({
-			objectID:PropTypes.string.isRequired,
-			// 用于展示的属性不是必须的
-			author:PropTypes.string,
-			url:PropTypes.string,
-			num_comments:PropTypes.number,
-			points:PropTypes.number,
-		})
-	).isRequired,
-	onDismiss:PropTypes.func.isRequired,
-}
-
 
 // Button 组件,Button组件期望传递一个className属性，但是在使用时候并没有传递className属性，所有用来确定className是可选的，因此给一个默认参数
 // className=''默认参数为空，如果没有使用则表示为空不会是undefined
@@ -702,18 +516,7 @@ Table.propTypes = {
 // }
 
 // 优化之前的写法 es6函数入参
-// function Button({onClick,className='',children}) {
-// 	return <button
-// 					onClick={onClick}
-// 					className ={className}
-// 					type="button"
-// 					>
-// 					{children}
-// 				</button>
-// }
-
-
-const Button = ({onClick,className='',children}) =>{
+function Button({onClick,className='',children}) {
 	return <button
 					onClick={onClick}
 					className ={className}
@@ -722,54 +525,6 @@ const Button = ({onClick,className='',children}) =>{
 					{children}
 				</button>
 }
-// 为组件添加接口 测试props传入参数的类型
-// propTypes的基本类型和复杂对象有
-// PropTypes.array;PropTypes.bool;PropTypes.func;PropTypes.number;PropTypes.object;PropTypes.string
-// 渲染节点 PropsType.node;PropTypes.element
-// 函数签名：只有在强类型语言才有，js没有函数签名，函数签名就是函数形参的数据类型
-// Button.propTypes = {
-// 	onClick:PropTypes.func,
-// 	className:PropTypes.string,
-// 	children:PropTypes.node,
-// }
-
-// 强制定义的props可以使用
-Button.propTypes = {
-	onClick:PropTypes.func.isRequired,
-	className:PropTypes.string,
-	children:PropTypes.node.isRequired,
-}
-
-// 给组件定义默认的prop 与es6一样
-Button.defaultProps = {
-	className:'',
-}
-// Loading组件
-const Loading = () => 
-<div>Loading....</div>
-// 高阶组件(HOC),一般情况下将with前缀作为命名 ，用于条件渲染
-// function withFoo(Component){
-// 	return function(props) {
-// 		return <Component {...props} />
-// 	}
-// }
-// const widthFoo = Component => props => <Component {...props} />
-// loading显示
-// const withLoading = (Component) =>(props) => 
-// props.isLoading ? <Loading /> : <Component {...props} />
-// 函数保留其他参数
-const withLoading  = Component => ({isLoading,...rest}) => 
-isLoading ? <Loading /> : <Component {...rest} />
-// Buotton是作为withLoadig的输入组件，增强的输出组件是ButtonWithLoading
-const ButtonWithLoading = withLoading(Button);
-
-// 将对象展开作为组件输入example
-// const {foo,bar} = props;
-// <Someponents foo={foo} bar={bar} />
-// <Someponents {...props} />
-
-
-
 
 // 当使用 onClick={doSomething()}时，doSomething()函数会在浏览器打开程序时立即执行；由于监听表达式时函数执行返回值而不是函数，所以点击按钮时不会有任何事情发生。
 // 但当使用onClick={doSomething} 时，因为doSomething是一个函数，所以它会在点击按钮时执行。同样规则适用于在程序中使用的onDismiss()类方法
@@ -790,14 +545,9 @@ const ButtonWithLoading = withLoading(Button);
 // 组件卸载也有生命周期，只有一个生命周期方法，componentWillUnmount();
 
 
-// 这里用到的default语句可以有以下使用情况
-//1、为了导入和导出单一功能，2、为了强调一个模块输出API的主要功能 3、可以向后兼容ES5只有一个到初五功能。
-// 使用default时候可以省略花括号，导入和导出功能可以一样也可以不一样
+
+
+
 export default App;
 // export default ExplainBindingsComponent;
-export {
-	Button,
-	Search,
-	Table,
-}
 

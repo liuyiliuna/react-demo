@@ -2,31 +2,13 @@
 // 1、使用DOM API（focus事件，媒体播放等）
 // 2、调用命令式节点动画
 // 3、与需要dom节点的第三方库集成
-
-
-
-// 使用第三方库lodash主要降js对对象数组和字符串的操作，这里用到了高级排序
-// 下载lodash,然后引入sortBy方法
-
 import React, { Component } from 'react';
-// 引入sortBy方法处理数据从高到低操作
-import {sortBy} from 'lodash';
+
 import './App.css';
 import { isRestElement } from '@babel/types';
 
 // 导入prop-types 是第三方组件库对props中的变量进行类型检测
 import PropTypes from 'prop-types'
-
-
-// 定义排序函数只是将list数据作为输出 NONE
-const SORTS = {
-	NONE: list => list,
-	TITLE:list => sortBy(list,'title'),
-	AUTHOR:list => sortBy(list,'author'),
-	COMMENTS:list => sortBy(list,'num_comments').reverse(),
-	POINTS:list => sortBy(list,'points').reverse(),
-};
-
 
 // import propTypes form 'prop-types';
 // 不受控组件在原生html中就是有自己的状态，此时需要将不受控组件变成受控组件
@@ -110,12 +92,6 @@ const PARAM_HPP = 'hitsPerPage=';
 			// 加载请求之前
 			isLoading:false,
 
-			// 存储排序函数
-			sortKey:'NONE',
-
-			// 反向排序
-			isSortReverse:false,
-
 		};
 		// this.onDismiss = this.onDismiss.bind(this);
 		this.searchList = this.searchList.bind(this);
@@ -127,17 +103,6 @@ const PARAM_HPP = 'hitsPerPage=';
 		// 缓存(如果缓存中存在就不请求或者请求)
 		// this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this)
 		this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
-
-		// 将sortKey设置成App组件的状态
-		this.onSort = this.onSort.bind(this);
-	}
-	onSort(sortKey) {
-		// 反向排序
-		const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse;
-
-		this.setState({sortKey,isSortReverse})
-
-		// this.setState({ sortKey });
 	}
 	// 缓存
 	// needsToSearchTopStories(searchTerm) {
@@ -343,16 +308,7 @@ fetchSearchTopStories(searchTerm,page = 0) {
 
 			
 			// 错误处理error
-			 const {
-				 searchTerm,
-				 results,
-				 searchKey,
-				 error,
-				 isLoading,
-				 sortKey,
-				// 反向排序
-				isSortReverse
-				} = this.state;
+			 const {searchTerm,results,searchKey,error,isLoading} = this.state;
 			 const page = (results && results[searchKey] && results[searchKey].page) || 0;
 			const list = (results && results[searchKey] && results[searchKey].hits) || [];
 
@@ -374,12 +330,8 @@ fetchSearchTopStories(searchTerm,page = 0) {
 									error?<div className="interactions">
 													<p>Something went wrong.</p>
 												</div>
-											:<Table 
-												list={list}		
-												sortKey={sortKey}
-												isSortReverse={isSortReverse}  //反向排序
-												onSort={this.onSort}
-												onDismiss={this.onDismiss}					
+											:<Table list={list}
+												onDismiss={this.onDismiss}									
 												/>
 								}
 						
@@ -560,63 +512,12 @@ const smallColumn = {
 	width:'10%'
 }
 class Table extends Component {
-	// 计算数据反向排序
 	render(){
-		const {
-			list,
-			sortKey,
-			isSortReverse,
-			onSort,
-			onDismiss
-		} = this.props;
-		const sortedList = SORTS[sortKey](list);
-		const reverseSortedList = isSortReverse
-					? sortedList.reverse()
-					: sortedList;
+		const {list,pattern,onDismiss} = this.props;
 		return(
 				<div className="table">
-				{/* 高级排序 */}
-					<div className="table-header">
-						<span style={{width:"40%"}}>
-								<Sort
-								sortKey={'TITLE'}
-								onSort={onSort}>
-									Title
-								</Sort>
-						</span>
-						<span style={{width:'30%'}}>
-							<Sort 
-							sortKey={'AUTHOR'}
-							onSort={onSort}
-							>
-								Author
-							</Sort>
-						</span>
-						<sapn style={{width:'10%'}}>
-							<Sort
-							sortKey={'COMMENTS'}
-							onSort={onSort}
-							>
-								Comments
-							</Sort>
-						</sapn>
-						<span style={{width:'10%'}}>
-							<Sort
-							sortKey={'POINTS'}
-							onSort={onSort}
-							>
-								Points
-							</Sort>
-						</span>
-						<span style={{width:'10%'}}>
-							Archive
-						</span>
-					</div>
-
-	{/* SORTS[sortKey](list).map(item => 。。。。） 反向排序 */}
 					{
-
-						 reverseSortedList.map(item =>
+						list.map(item =>
 							<div key={item.objectID} className="table-row">
 								<span style={{ width: '40%' }}>
 									<a href={item.url}>{item.title}</a>
@@ -646,15 +547,6 @@ class Table extends Component {
 		)
 	}
 }
-
-// Sort组件
-const Sort = ({sortKey,onSort,children}) => 
-<Button
-	onClick={()=> onSort(sortKey)}
-	className='button-inline'
->
-	{children}
-</Button>
 
 // 为Table组件定义接口
 Table.propTypes = {
